@@ -1,6 +1,4 @@
-import {createStore} from 'redux';
-
-import {persistStore, persistReducer} from 'redux-persist';
+import {persistReducer} from 'redux-persist';
 
 import AsyncStorage from '@react-native-community/async-storage';
 
@@ -36,10 +34,4 @@ const reducer = (state = initialState, action) => {
   }
 };
 
-const persistedReducer = persistReducer(persistConfig, reducer);
-
-export const store = createStore(persistedReducer);
-export const persistor = persistStore(store);
-// store.dispatch();
-// console.log(store.getState());
-// console.log(persistor.getState());
+export const persistedReducer = persistReducer(persistConfig, reducer);

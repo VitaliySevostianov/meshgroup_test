@@ -3,8 +3,8 @@ import {View, Text, Linking} from 'react-native';
 
 import styles from '../styles';
 
-const DriverInfo = ({extraData, navigation}) => {
-  const driver = extraData.data;
+const DriverInfo = ({route}) => {
+  const driver = route.params.data;
   return (
     <>
       <View style={styles.driverInfoCard}>

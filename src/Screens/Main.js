@@ -1,55 +1,34 @@
 import React, {useEffect, useState} from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  Button,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-  BackHandler,
-} from 'react-native';
+import {View, Text, FlatList, Button, TouchableOpacity} from 'react-native';
 
-import axios from 'axios';
+const mapStateToProps = (state) => ({
+  currentDriversPage: state.currentDriversPage,
+});
+const mapDispatchToProps = (dispatch) => ({
+  setCurrentDriversPage: (page) =>
+    dispatch({type: 'SET_CURRENT_DRIVERS_PAGE', payload: page}),
+});
+
+import {connect} from 'react-redux';
 
 import styles from '../styles';
+import Loading from '../Components/Loading';
 
-import {store} from '../Redux/reducer';
-import {setCurrentDriversPage} from '../Redux/actions';
+import getDriversData from '../functions/api/getDriversData';
 
-const Main = ({navigation}) => {
+const Main = ({navigation, currentDriversPage, setCurrentDriversPage}) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentDrivers, setCurrentDrivers] = useState([]);
-  const [currentPage, setCurrentPage] = useState(
-    store.getState().currentDriversPage,
-  );
-  const offset = 10;
-  const limit = 10;
-  const getData = async () => {
-    try {
-      setIsLoaded(false);
-      const response = await axios.get(
-        `https://ergast.com/api/f1/drivers.json?limit=${limit}&offset=${
-          offset * currentPage
-        }`,
-      );
-      setCurrentDrivers(await response.data.MRData.DriverTable.Drivers);
-      setIsLoaded(true);
-    } catch {
-      Alert.alert(
-        'Неполадки в сети',
-        'Проверьте интернет соединение и перезапустите приложение',
-        [{text: 'OK', onPress: () => BackHandler.exitApp()}],
-        {cancelable: false},
-      );
-    }
-  };
-
   useEffect(() => {
-    store.dispatch(setCurrentDriversPage(currentPage));
-    getData();
+    setIsLoaded(false);
+    getDriversData(currentDriversPage).then((data) => {
+      if (data !== undefined) {
+        setCurrentDrivers(data);
+        setIsLoaded(true);
+      }
+    });
     return () => {};
-  }, [currentPage]);
+  }, [currentDriversPage]);
 
   if (isLoaded === true) {
     return (
@@ -86,31 +65,25 @@ const Main = ({navigation}) => {
         <View style={styles.pages}>
           <Button
             title="Назад"
-            color={currentPage >= 1 ? '' : 'grey'}
+            color={currentDriversPage >= 1 ? '' : 'grey'}
             onPress={() =>
-              currentPage >= 1
-                ? setCurrentPage(currentPage - 1)
-                : console.log('No')
+              currentDriversPage >= 1 &&
+              setCurrentDriversPage(currentDriversPage - 1)
             }></Button>
-          <Text>{currentPage + 1}</Text>
+          <Text>{currentDriversPage + 1}</Text>
           <Button
             title="Дальше"
             color={currentDrivers.length == 10 ? '' : 'grey'}
             onPress={() =>
-              currentDrivers.length == 10
-                ? setCurrentPage(currentPage + 1)
-                : console.log('No')
+              currentDrivers.length == 10 &&
+              setCurrentDriversPage(currentDriversPage + 1)
             }></Button>
         </View>
       </View>
     );
   } else {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color="lime" size={100}></ActivityIndicator>
-      </View>
-    );
+    return <Loading />;
   }
 };
 
-export default Main;
+export default connect(mapStateToProps, mapDispatchToProps)(Main);
